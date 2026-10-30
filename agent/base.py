@@ -3,7 +3,7 @@ from ipaddress import ip_address
 
 from aiohttp import web
 
-AGENT_VERSION = 27
+AGENT_VERSION = 28
 
 try:
     with open("agent_config.json", "r") as f:
@@ -20,6 +20,17 @@ try:
     MY_DN42_ULA_ADDRESS = ip_address(raw_config["MY_DN42_ULA_ADDRESS"])
     MY_DN42_IPv4_ADDRESS = ip_address(raw_config["MY_DN42_IPv4_ADDRESS"])
     MY_WG_PUBLIC_KEY = raw_config["MY_WG_PUBLIC_KEY"]
+    ROUTEROS_HOST = raw_config["ROUTEROS_HOST"]
+    ROUTEROS_PORT = raw_config["ROUTEROS_PORT"]
+    ROUTEROS_USERNAME = raw_config["ROUTEROS_USERNAME"]
+    ROUTEROS_PASSWORD = raw_config["ROUTEROS_PASSWORD"]
+    ROUTEROS_USE_SSL = raw_config["ROUTEROS_USE_SSL"]
+    ROUTEROS_SSL_VERIFY = raw_config["ROUTEROS_SSL_VERIFY"]
+    ROUTEROS_WIREGUARD_INTERFACE = raw_config["ROUTEROS_WIREGUARD_INTERFACE"]
+    ROUTEROS_BGP_TEMPLATE = raw_config["ROUTEROS_BGP_TEMPLATE"]
+    ROUTEROS_LOCAL_ASN = raw_config["ROUTEROS_LOCAL_ASN"]
+    ROUTEROS_ROUTING_TABLE_4 = raw_config["ROUTEROS_ROUTING_TABLE_4"]
+    ROUTEROS_ROUTING_TABLE_6 = raw_config["ROUTEROS_ROUTING_TABLE_6"]
     BIRD_TABLE_4 = raw_config["BIRD_TABLE_4"]
     BIRD_TABLE_6 = raw_config["BIRD_TABLE_6"]
     VNSTAT_AUTO_ADD = raw_config["VNSTAT_AUTO_ADD"]

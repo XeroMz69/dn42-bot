@@ -101,6 +101,24 @@ Config items are located at `agent/agent_config.json`.
 | VNSTAT_AUTO_ADD            | Whether to automatically add tunnel interface to vnstat      |
 | VNSTAT_AUTO_REMOVE         | Whether to automatically remove tunnel interface from vnstat |
 
+The agent manages a RouterOS v7.24.2 router through the native API. Use API-SSL
+on port 8729 in production and create a dedicated RouterOS user with only the
+policies required to manage WireGuard peers, IP addresses, BGP connections, and
+read routing and interface state. The WireGuard interface named by
+`ROUTEROS_WIREGUARD_INTERFACE` and the BGP template named by
+`ROUTEROS_BGP_TEMPLATE` must exist before starting the agent.
+
+RouterOS settings are configured in `agent_config.json` using
+`ROUTEROS_HOST`, `ROUTEROS_PORT`, `ROUTEROS_USERNAME`, `ROUTEROS_PASSWORD`,
+`ROUTEROS_USE_SSL`, `ROUTEROS_SSL_VERIFY`, `ROUTEROS_WIREGUARD_INTERFACE`,
+`ROUTEROS_BGP_TEMPLATE`, `ROUTEROS_LOCAL_ASN`,
+`ROUTEROS_ROUTING_TABLE_4`, and `ROUTEROS_ROUTING_TABLE_6`. Do not commit the
+RouterOS password or a private CA certificate to the repository.
+
+See the complete [RouterOS v7.24.2 deployment guide](docs/ROUTEROS.md) for
+RouterOS preparation, agent installation, verification, troubleshooting, and
+security recommendations.
+
 `NET_SUPPORT` item has following subconfig items:
 
 - `ipv4`: Whether support IPv4

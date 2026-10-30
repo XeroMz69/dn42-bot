@@ -1,21 +1,13 @@
-import os
 import re
 from ipaddress import IPv4Network, IPv6Network, ip_address
 
 import base
 from aiohttp import web
+from peer_backend import PeerValidationError, RouterOSPeerBackend
 from tools import set_sentry, simple_run
 
 
-def get_current_peer_num():
-    wg_conf = [i[5:-5] for i in os.listdir("/etc/wireguard") if i.startswith("dn42-") and i.endswith(".conf")]
-    bird_conf = [i[:-5] for i in os.listdir("/etc/bird/dn42_peers") if i.endswith(".conf")]
-    wg_conf_len = len([i for i in wg_conf if i.isdigit()])
-    bird_conf_len = len([i for i in bird_conf if i.isdigit()])
-    if wg_conf_len != bird_conf_len:
-        return None
-    else:
-        return wg_conf_len
+peer_backend = RouterOSPeerBackend()
 
 
 @base.routes.post("/pre_peer")
@@ -24,9 +16,10 @@ async def pre_peer(request):
     secret = request.headers.get("X-DN42-Bot-Api-Secret-Token")
     if secret != base.SECRET:
         return web.Response(status=403)
-    current_peer_num = get_current_peer_num()
-    if current_peer_num is None:
-        return web.Response(body="wireguard and bird config not match", status=500)
+    try:
+        current_peer_num = await peer_backend.count()
+    except Exception as exc:
+        return web.Response(body=str(exc), status=503)
     return web.json_response(
         {
             "existed": current_peer_num,
@@ -51,6 +44,16 @@ async def get_info(request):
             return web.Response(status=400)
     else:
         return web.Response(status=403)
+
+    try:
+        info = await peer_backend.info(asn)
+    except PeerValidationError as exc:
+        return web.Response(body=str(exc), status=400)
+    except Exception as exc:
+        return web.Response(body=str(exc), status=503)
+    if info is None:
+        return web.Response(status=404)
+    return web.json_response(info)
 
     wg_exist = os.path.isfile(f"/etc/wireguard/dn42-{asn}.conf")
     bird_exist = os.path.isfile(f"/etc/bird/dn42_peers/{asn}.conf")
@@ -228,6 +231,14 @@ async def setup_peer(request):
     else:
         return web.Response(status=403)
 
+    try:
+        await peer_backend.create_or_update(peer_info)
+    except PeerValidationError as exc:
+        return web.Response(body=str(exc), status=400)
+    except Exception as exc:
+        return web.Response(body=str(exc), status=503)
+    return web.Response(status=200)
+
     current_peer_num = get_current_peer_num()
     if current_peer_num is None:
         return web.Response(body="wireguard and bird config not match", status=500)
@@ -347,6 +358,14 @@ async def remove_peer(request):
     else:
         return web.Response(status=403)
 
+    try:
+        await peer_backend.remove(asn)
+    except PeerValidationError as exc:
+        return web.Response(body=str(exc), status=400)
+    except Exception as exc:
+        return web.Response(body=str(exc), status=503)
+    return web.Response(status=200)
+
     simple_run(f"systemctl stop wg-quick@dn42-{asn}")
     simple_run(f"systemctl disable wg-quick@dn42-{asn}")
     try:
@@ -375,6 +394,14 @@ async def restart_peer(request):
             return web.Response(status=400)
     else:
         return web.Response(status=403)
+
+    try:
+        await peer_backend.restart(asn)
+    except PeerValidationError as exc:
+        return web.Response(body=str(exc), status=400)
+    except Exception as exc:
+        return web.Response(body=str(exc), status=503)
+    return web.Response(status=200)
 
     out_wg = simple_run(f"systemctl restart wg-quick@dn42-{asn}")
     out_v4 = simple_run(f"birdc restart DN42_{asn}_v4")

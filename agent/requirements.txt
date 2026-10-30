@@ -1,2 +1,3 @@
 aiohttp==3.12.15
 sentry_sdk==2.39.0
+routeros-api==0.21.0
